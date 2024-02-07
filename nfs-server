@@ -3,7 +3,7 @@
 set -eu
 set -o pipefail
 
-docker_network="${NFS_SERVER_DOCKER_NETWORK:-172.16.0.0/12}"
+docker_network=$NFS_SERVER_DOCKER_NETWORK
 export_options="rw,sync,root_squash,no_subtree_check,fsid=0,insecure"
 
 data_dir=/mnt/data
@@ -18,7 +18,7 @@ exportfs -rv
 
 nfsd_debug_opt=
 mountd_debug_opt=
-if [ "$NFS_SERVER_DEBUG" ]; then
+if [ $NFS_SERVER_DEBUG -eq 1 ]; then
     nfsd_debug_opt="-d"
     mountd_debug_opt="-d all"
 fi

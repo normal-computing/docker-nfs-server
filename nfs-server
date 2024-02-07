@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+set -o pipefail
+
+docker_network="${NFS_SERVER_DOCKER_NETWORK:-172.16.0.0/12}"
+export_options="rw,sync,root_squash,no_subtree_check,fsid=0,insecure"
+
+data_dir=/mnt/data
+if [ ! -d "$data_dir" ]; then
+    echo "no data directory found at $data_dir" >&2
+    exit 1
+fi
+
+rm -f /etc/exports
+echo "/mnt/data $docker_network($export_options)" >/etc/exports
+exportfs -rv
+
+nfsd_debug_opt=
+mountd_debug_opt=
+if [ "$NFS_SERVER_DEBUG" ]; then
+    nfsd_debug_opt="-d"
+    mountd_debug_opt="-d all"
+fi
+
+mount -t nfsd nfsd /proc/fs/nfsd
+
+rpc.nfsd -N 3 -V 4 --grace-time 10 $nfsd_debug_opt &
+rpc.mountd -N 2 -N 3 -V 4 --foreground $mountd_debug_opt &
+
+wait

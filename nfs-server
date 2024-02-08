@@ -3,7 +3,7 @@
 set -eu
 set -o pipefail
 
-docker_network=$NFS_SERVER_DOCKER_NETWORK
+allowed_clients=$NFS_SERVER_ALLOWED_CLIENTS
 export_options="rw,sync,root_squash,no_subtree_check,fsid=0,insecure"
 
 data_dir=/mnt/data
@@ -13,7 +13,7 @@ if [ ! -d "$data_dir" ]; then
 fi
 
 rm -f /etc/exports
-echo "/mnt/data $docker_network($export_options)" >/etc/exports
+echo "/mnt/data $allowed_clients($export_options)" >/etc/exports
 exportfs -rv
 
 nfsd_debug_opt=

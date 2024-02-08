@@ -1,0 +1,30 @@
+name: "nfs-server"
+
+on:
+  - "push"
+
+jobs:
+  build:
+    if: "github.ref == 'refs/heads/main'"
+    runs-on: "ubuntu-latest"
+    timeout-minutes: 10
+    steps:
+      - name: "Configure Ubuntu"
+        run: |
+          echo "dash dash/sh boolean false" | sudo debconf-set-selections
+          sudo dpkg-reconfigure dash
+        env:
+          DEBIAN_FRONTEND: "noninteractive"
+      - uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+      - name: "Build the image"
+        run: "make image"
+      - name: "Log in to the container registry"
+        uses: "docker/login-action@v3"
+        with:
+          registry: "ghcr.io"
+          username: "${{github.actor}}"
+          password: "${{secrets.GITHUB_TOKEN}}"
+      - name: "Push the image to the repository"
+        run: "docker image push ghcr.io/normal-computing/nfs-server"
